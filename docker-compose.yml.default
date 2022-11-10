@@ -1,0 +1,76 @@
+version: '3'
+services:
+    php:
+        hostname: php
+        container_name: php
+        image: xphp:7.4-fpm-alpine
+        command: php-fpm -F
+        #volumes:
+        #    - /path/to/php/php-fpm.conf:/usr/local/etc/php-fpm.conf
+        #    - /path/to/php/php.ini:/usr/local/etc/php/php.ini
+        #    - /path/to/log/php:/var/log/php
+        #    - /path/to/project:/wwwdir
+        networks:
+            dev-net:
+                ipv4_address: 172.16.10.10
+        extra_hosts:
+            - mysql:172.16.10.11
+            - redis:172.16.10.12
+            - memcached:172.16.10.13
+    nginx:
+        hostname: nginx
+        container_name: nginx
+        image: xnginx:1.23-alpine
+        command: nginx -g 'daemon off;'
+        #volumes:
+        #    - /path/to/nginx:/etc/nginx
+        #    - /path/to/log/nginx:/var/log/nginx
+        #    - /path/to/project:/wwwdir
+        ports:
+            - 80:80
+        networks:
+            dev-net:
+                ipv4_address: 172.16.10.20
+        extra_hosts:
+            - phpfpm:172.16.10.10
+    mysql:
+        hostname: mysql
+        container_name: mysql
+        image: xmysql:8.0
+        command: mysqld
+        environment:
+            - MYSQL_ROOT_PASSWORD=rootpwd
+        #volumes:
+        #    - /path/to/mysql/conf.d:/etc/mysql/conf.d
+        #    - /path/to/data/mysql:/var/lib/mysql
+        #    - /path/to/log/mysql:/var/log/mysql
+        networks:
+            dev-net:
+                ipv4_address: 172.16.10.11
+    redis:
+        hostname: redis
+        container_name: redis
+        image: xredis:6.0-alpine
+        command: redis-server #/etc/redis.conf
+        #volumes:
+        #    - /path/to/redis/redis.conf:/etc/redis.conf
+        #    - /path/to/data/redis:/var/lib/redis
+        #    - /path/to/log/redis:/var/log/redis
+        networks:
+            dev-net:
+                ipv4_address: 172.16.10.12
+    memcached:
+        hostname: memcached
+        container_name: memcached
+        image: xmemcached:1.6-alpine
+        command: memcached -u memcache -vv
+        networks:
+            dev-net:
+                ipv4_address: 172.16.10.13
+networks:
+  dev-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+          - subnet: 172.16.10.0/24

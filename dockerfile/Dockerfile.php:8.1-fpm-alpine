@@ -1,0 +1,54 @@
+# syntax=docker/dockerfile:1
+FROM php:8.1-fpm-alpine
+
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+	&& apk update \
+	&& apk add --no-cache --virtual .build-deps \
+        autoconf \
+        file \
+        gcc \
+        g++ \
+        libc-dev \
+        make \
+        pkgconf \
+        re2c \ 
+        tzdata \
+    && apk add --no-cache --virtual .run-deps \
+        coreutils \
+        libltdl \
+        freetype-dev \
+        gettext-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        curl-dev \
+        libressl-dev \
+        libmcrypt-dev \
+        libxml2-dev \
+        cyrus-sasl-dev \
+        libmemcached-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+       	gd gettext mysqli pdo_mysql opcache soap sockets pcntl bcmath \
+########################################################################
+    && pecl install redis-5.3.7 \
+    && pecl install memcached-3.2.0 \
+    && pecl install xdebug-3.1.6 \
+    && pecl install swoole-5.0.1 \
+    && pecl install mongodb-1.14.2\
+########################################################################
+    && docker-php-ext-enable redis memcached xdebug swoole mongodb \
+    && curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" >  /etc/timezone \
+    && apk del .build-deps
+
+# Possible values for ext-name:
+# bcmath bz2 calendar ctype curl dba dom enchant exif fileinfo filter ftp gd gettext gmp 
+# hash iconv imap interbase intl json ldap mbstring mysqli oci8 odbc opcache pcntl 
+# pdo pdo_dblib pdo_firebird pdo_mysql pdo_oci pdo_odbc pdo_pgsql pdo_sqlite pgsql 
+# phar posix pspell readline recode reflection session shmop simplexml 
+# snmp soap sockets sodium spl standard sysvmsg sysvsem sysvshm tidy tokenizer 
+# wddx xml xmlreader xmlrpc xmlwriter xsl zend_test zip
+
+CMD ["php-fpm", "-F"]
