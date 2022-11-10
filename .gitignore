@@ -1,0 +1,7 @@
+.env
+conf/
+data/
+runtime/
+docker-compose.yml
+docker-compose.yml.back
+
